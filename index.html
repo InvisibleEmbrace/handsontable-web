@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="css/handsontable.full.min.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/handsontable.full.min.js"></script>
+</head>
+<body>
+<div id="example"></div>
+
+<script>
+    var allData = [];
+    var rows = [];
+    var headers = ["1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"];
+    var usersIdObject = {};
+
+    $(function(){
+        initData();
+    });
+
+    //加载初始化数据
+    function initData(){
+        $.get({
+            url:'http://localhost:8080/signed/user?ids=1,2',
+            success: function (resp) {
+                $.each(resp, function (index, item) {
+                    var userId = item.userId;
+                    usersIdObject[userId] = index;
+                    rows.push(item.username);
+                    var arr = [];
+                    $.each(item.signedList,function (i,e) {
+                        arr.push(e.day);
+                    })
+                    allData.push(arr);
+                });
+                console.log( allData);
+                console.log(usersIdObject);
+                console.log(rows);
+                var container = document.getElementById('example');
+                var hot = new Handsontable(container, {
+                    data: allData,
+                    rowHeaders: rows,
+                    colHeaders: headers,
+                    filters: true,
+                    dropdownMenu: true,
+                    columns: {length:31},
+                    afterChange: function (change, source) {
+                        console.log("元数据" + source);
+                        console.log("改变数据" + change);
+                        console.log(change[0][0]);
+                        console.log(change[0][1]);
+                        console.log(change[0][3]);
+                        alert(hot.getData(1, 1));
+                    }
+                });
+
+            }
+        })
+    }
+
+    var objectData = [
+        ["xxx",["333"]],
+        ["xxx",["eeee"]],
+    ];
+
+
+
+
+
+</script>
+</body>
+</html>
