@@ -4,44 +4,87 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <link rel="stylesheet" href="css/handsontable.full.min.css">
-    <script src="js/jquery.min.js"></script>
-    <script src="js/handsontable.full.min.js"></script>
-    <script src="layer/layer.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+
 </head>
 <body>
-<div id="example"></div>
+<div id="content">
+    <div id="he">2018年12月</div>
+    <div id="example"></div>
+</div>
 
+<script src="js/jquery.min.js"></script>
+<script src="js/handsontable.full.min.js"></script>
+<script src="layer/layer.js"></script>
+<script src="js/dateUtil.js"></script>
 <script>
+    console.log(getMonthDays("2018-12"));
+    console.log(getEveryDay("2018-12"));
+
     var allData = [];
     var rows = [];
-    var headers = ["1", "2", "3", "4", "5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31"];
-    var usersIdObject = {};
+    var headers = [];
+
+    var currentMonth = "2018-12";
+    var days = getMonthDays(currentMonth);
+    var nameArr = {};
 
     $(function(){
+
         initData();
     });
+
+    function initCol(day,date) {
+        var week = getWeek(date);
+        return day + " (" + week + ")";
+    }
 
     //加载初始化数据
     function initData() {
         $.get({
-            url: 'http://localhost:8080/work/list',
+            url: 'http://localhost:8080/work/list?names=张三,李四,布鲁斯,梁非凡&date=2018-12',
             success: function (resp) {
                 $.each(resp, function (index, item) {
-                    var userId = item.id;
-                    usersIdObject[index] = userId;
+                    var tempName = item.staffName;
+                    if (!nameArr[tempName]) {
+                        nameArr[tempName] = item.staffNo;
+                    }
                     if (item.staffName && (rows.indexOf(item.staffName)>-1)) {
                         var x = rows.indexOf(item.staffName);
-                        allData[x][item.day-1] = item.workFlagName;
+                        allData[x][item.day] = item.workFlagName;
                     }else {
                         rows.push(item.staffName);
                         var arr = [];
-                        arr[item.day-1] = (item.workFlagName);
+                        arr[item.day] = (item.workFlagName);
                         allData.push(arr);
                     }
                 });
                 console.log(allData);
-                console.log(usersIdObject);
                 console.log(rows);
+
+                var cols = [];
+                /*$.each(headers, function (i, e) {
+                    var row = {};
+                    var date = currentMonth + "-" + (i + 1);
+                    row.data = e;
+                    row.type = 'autocomplete';
+                    row.source = ["上班", "休息", "请假"];
+                    cols.push(row);
+                });*/
+
+
+                for (var i = 1; i <= days ; i++) {
+                    var row = {};
+                    var date = currentMonth + "-" + (i);
+                    row.data = i;
+                    row.type = 'autocomplete';
+                    row.source = ["上班", "休息", "请假"];
+                    cols.push(row);
+                    headers.push(initCol(i,date));
+                }
+                console.log(cols);
+
+
                 var container = document.getElementById('example');
                 var hot = new Handsontable(container, {
                     data: allData,
@@ -49,18 +92,20 @@
                     colHeaders: headers,
                     filters: true,
                     dropdownMenu: true,
-                    columns: {length: 31},
+                    columns: cols,
+                    rowHeights: 20,
+                    colWidths: 60,
                     afterChange: function (change, source) {
                         console.log(source);
+                        console.log(change);
                         if (source === 'loadData') {
                             return;
                         }else if (source === 'edit') {
                             var x = change[0][0];
                             var y = change[0][1];
                             var temp = change[0][3];
-                            var userId = usersIdObject[x];
-                            var prefix = userId.substring(0,userId.lastIndexOf("-") + 1);
-                            var day = y + 1;
+                            var prefix = nameArr[rows[x]] + "-" + currentMonth + "-";
+                            var day = y;
                             var id = prefix + day;
                             console.log("当前日期" + day);
                             console.log(id);
@@ -81,11 +126,12 @@
                                         layer.msg('保存失败');
                                     }
                                 });
-
                         }
                     }
 
                 });
+                console.log(nameArr);
+                console.log(hot.getRowHeader(2));
             }
         });
     }

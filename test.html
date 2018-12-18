@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="css/handsontable.full.min.css">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/handsontable.full.min.js"></script>
+</head>
+<body>
+
+<div id="example1" class="hot handsontable htColumnHeaders"></div>
+
+
+<script>
+    var data = [
+            {id: 1, name: 'Ted', isActive: true, color: 'orange', date: '2015-01-01'},
+            {id: 2, name: 'John', isActive: false, color: 'black', date: null},
+            {id: 3, name: 'Al', isActive: true, color: 'red', date: null},
+            {id: 4, name: 'Ben', isActive: false, color: 'blue', date: null}
+        ],
+        container = document.getElementById('example1'),
+        hot1,
+        yellowRenderer,
+        greenRenderer;
+
+    yellowRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        Handsontable.renderers.TextRenderer.apply(this, arguments);
+        td.style.backgroundColor = 'yellow';
+
+    };
+
+    greenRenderer = function(instance, td, row, col, prop, value, cellProperties) {
+        Handsontable.renderers.TextRenderer.apply(this, arguments);
+        td.style.backgroundColor = 'green';
+
+    };
+
+    hot1 = new Handsontable(container, {
+        data: data,
+        startRows: 5,
+        colHeaders: true,
+        minSpareRows: 1,
+        columns: [
+            {data: "id", type: 'text'},
+            // 'text' is default, you don't actually need to declare it
+            {data: "name", renderer: yellowRenderer},
+            // use default 'text' cell type but overwrite its renderer with yellowRenderer
+            {data: "isActive", type: 'checkbox'},
+            {data: "date", type: 'date', dateFormat: 'YYYY-MM-DD'},
+            {data: "color",
+                type: 'autocomplete',
+                source: ["上班","下班","请假"]
+            }
+        ],
+        cell: [
+            {row: 1, col: 0, renderer: greenRenderer}
+        ],
+        cells: function (row, col, prop) {
+            if (row === 0 && col === 0) {
+                this.renderer = greenRenderer;
+            }
+        },
+        afterChange: function (changes,source) {
+            console.log(changes);
+            console.log(source);
+        }
+    });
+</script>
+</body>
+</html>
